@@ -1,0 +1,15 @@
+{
+  "name": "render-scan",
+  "version": "0.0.1",
+  "description": "View the performanec degradation of any app",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "NullVoxPopuli",
+  "license": "MIT",
+  "devDependencies": {
+    "vite": "^6.0.2"
+  }
+}
