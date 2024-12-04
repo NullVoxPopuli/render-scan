@@ -10,10 +10,10 @@ let styles = `
     right: 0;
     bottom: 0;
     box-sizing: border-box;
+    z-index: 1000000000;
     
     .render-perf__box {
       box-sizing: border-box;
-      font-size: 0.5rem;
       font-family: sans-serif;
       display: block;
       position: fixed;
@@ -23,7 +23,16 @@ let styles = `
       transition: opacity 0.25s;
 
       .render-perf__title {
-        margin-top: -1rem;
+        display: inline-block;
+        box-sizing: content-box;
+        font-size: 0.75rem;
+        border: 1px solid #aa00ff;
+        border-bottom: none;
+        padding: 0.125rem 0.5rem;
+        color: white;
+        background-color: rgba(100, 0, 200, 1);
+        position: relative;
+        top: -1.5rem;
       }
     }
   }
@@ -76,7 +85,7 @@ class Highlight {
 
     this.#reasons.values().forEach(x => total += x);
 
-    return `x${total} | Rerender | ${reasons}`;
+    return `x${total} | ${reasons}`;
   }
 
   #fadeOut;
@@ -85,8 +94,9 @@ class Highlight {
     cancelAnimationFrame(this.#frame);
     clearTimeout(this.#fadeOut);
     this.#frame = requestAnimationFrame(() => {
-      let rect = this.target.getBoundingClientRect();
+      let rect = this.#getRect();
 
+      if (!rect) return;
       if (rect.top > window.innerHeight) return;
       if (rect.left > window.innerWidth) return;
 
@@ -95,11 +105,10 @@ class Highlight {
       }
 
       this.#title.textContent = this.title;
+
       Object.assign(this.#element.style, {
         top: rect.y + px,
         left: rect.x + px,
-        // right: rect.right + px,
-        // bottom: rect.bottom + px,
         width: rect.width + px,
         height: rect.height + px,
       });
@@ -107,8 +116,39 @@ class Highlight {
       this.#element.style.opacity = 1;
       this.#fadeOut = setTimeout(() => {
         this.#element.style.opacity = 0;
+        this.#reasons.clear();
       }, 1000);
     })
+  }
+
+  #getRect() {
+    if (this.target instanceof Element) {
+      let rect = this.target.getBoundingClientRect();
+
+      return {
+        x: rect.x,
+        y: rect.y,
+        width: rect.width,
+        height: rect.height,
+      }
+    }
+
+    let range = document.createRange();
+    range.selectNodeContents(this.target);
+    let rects = range.getClientRects();
+    let rect = rects[0];
+
+    if (!rect) {
+      console.log(`Could not determine coordinates of `, this.target);
+      return;
+    }
+
+    return {
+      x: rect.x,
+      y: rect.y,
+      width: rect.width,
+      height: rect.height,
+    }
   }
 }
 let cache = new WeakMap();
@@ -125,9 +165,12 @@ function highlightNode(element, why) {
 
 let mutationObserver = new MutationObserver((mutationList, observer) => {
   for (let mutation of mutationList) {
-    let shouldIgnore = mutation.target?.getAttribute('class')?.includes('render-perf__')
-    if (shouldIgnore) {
-      continue;
+    if (typeof mutation.target.getAttribute === 'function') {
+      let shouldIgnore = mutation.target.getAttribute('class')?.includes('render-perf__')
+
+      if (shouldIgnore) {
+        continue;
+      }
     }
 
     switch (mutation.type) {
@@ -138,9 +181,10 @@ let mutationObserver = new MutationObserver((mutationList, observer) => {
         highlightNode(mutation.target, 'children changed');
         break;
       case "characterData":
-        // how to get element?
         highlightNode(mutation.target, 'text changed');
-
+        break;
+      default:
+        console.log(`Unhandled mutation type: ${mutation.type}`);
     }
   }
 });
@@ -149,7 +193,6 @@ mutationObserver.observe(body, {
   subtree: true,
   childList: true,
   attributes: true,
-  //characterData: true,
+  characterData: true,
 });
 
-console.log({ cache });

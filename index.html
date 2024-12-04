@@ -2,6 +2,8 @@
 <html>
 
 <head>
+  <!-- https://github.com/thepassle/generic-components -->
+  <script src="https://unpkg.com/@generic-components/components@latest/switch.js" type="module"></script>
   <style>
     * {
       box-sizing: borderbox;
@@ -20,6 +22,12 @@
       flex-direction: column;
     }
 
+    output {
+      display: flex;
+      gap: 0.5rem;
+      flex-direction: column;
+    }
+
     output div {
       border: 1px solid;
       padding: 1rem;
@@ -30,29 +38,68 @@
 <body>
   <div class="layout">
     <button id="add-el">add element</button>
-    <button id="change-text">change text</button>
-    <output></output>
+    <button id="change-text">change element text</button>
+    <button id="add-text-node">add text node</button>
+    <button id="change-text-node">change text node</button>
+    <output id="elements"></output>
+    <output id="text-nodes"></output>
+    <generic-disclosure>
+      <button slot="toggle">Events</button>
+      <div slot="detail">
+        <table class="tg">
+          <thead>
+            <tr>
+              <th>name</th>
+              <th>detail</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>selected-changed</td>
+              <td>number</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </generic-disclosure>
+
 
     <script>
       let el = {
         add: document.querySelector('#add-el'),
+        addText: document.querySelector('#add-text-node'),
         change: document.querySelector('#change-text'),
-        output: document.querySelector('output'),
+        changeText: document.querySelector('#change-text-node'),
+        output: document.querySelector('#elements'),
+        textOutput: document.querySelector('#text-nodes'),
       }
 
+      let textNodes = [];
       el.add.addEventListener('click', () => {
         let div = document.createElement('div');
         div.innerHTML = el.output.children.length;
         el.output.appendChild(div);
       });
+      el.addText.addEventListener('click', () => {
+        let newText = document.createTextNode(Math.random());
+        textNodes.push(newText);
+        el.textOutput.appendChild(newText);
+        el.textOutput.appendChild(document.createElement('br'));
+      });
       el.change.addEventListener('click', () => {
         let num = el.output.children.length
-
         let i = Math.floor(Math.random() * num);
 
         let item = el.output.children[i];
 
         item.textContent = item.textContent += '!';
+      });
+      el.changeText.addEventListener('click', () => {
+        let num = textNodes.length;
+        let i = Math.floor(Math.random() * num);
+        let item = textNodes[i];
+
+        item.textContent = item.textContent = Math.random();
       });
     </script>
     <script src="./index.js" type="text/javascript"></script>
