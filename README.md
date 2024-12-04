@@ -4,6 +4,8 @@ Visualize performance!
 
 render-scan will show you whenever something in the DOM updates, and what kind of update ocurred.
 
+This may be important information for framework authors, so that the rendering parts of their libraries can dedupe what would otherwise be no-op renders. 
+
 ## Bookmarklet
 
 <details><summary>The easiest way to check render perf is via this bookmarklet.</summary>
