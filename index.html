@@ -2,8 +2,6 @@
 <html>
 
 <head>
-  <!-- https://github.com/thepassle/generic-components -->
-  <script src="https://unpkg.com/@generic-components/components@latest/switch.js" type="module"></script>
   <style>
     * {
       box-sizing: borderbox;
@@ -43,26 +41,41 @@
     <button id="change-text-node">change text node</button>
     <output id="elements"></output>
     <output id="text-nodes"></output>
-    <generic-disclosure>
-      <button slot="toggle">Events</button>
-      <div slot="detail">
-        <table class="tg">
-          <thead>
-            <tr>
-              <th>name</th>
-              <th>detail</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>selected-changed</td>
-              <td>number</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </generic-disclosure>
 
+    <cds-accordion>
+      <cds-accordion-item title="Section 1 title">
+        <p>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
+          eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad
+          minim veniam, quis nostrud exercitation ullamco laboris nisi ut
+          aliquip ex ea commodo consequat.
+        </p>
+      </cds-accordion-item>
+      <cds-accordion-item title="Section 2 title">
+        <p>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
+          eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad
+          minim veniam, quis nostrud exercitation ullamco laboris nisi ut
+          aliquip ex ea commodo consequat.
+        </p>
+      </cds-accordion-item>
+      <cds-accordion-item title="Section 3 title">
+        <p>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
+          eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad
+          minim veniam, quis nostrud exercitation ullamco laboris nisi ut
+          aliquip ex ea commodo consequat.
+        </p>
+      </cds-accordion-item>
+      <cds-accordion-item title="Section 4 title">
+        <p>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
+          eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad
+          minim veniam, quis nostrud exercitation ullamco laboris nisi ut
+          aliquip ex ea commodo consequat.
+        </p>
+      </cds-accordion-item>
+    </cds-accordion>
 
     <script>
       let el = {
@@ -104,6 +117,15 @@
     </script>
     <script src="./index.js" type="text/javascript"></script>
   </div>
+  <script type="module"
+    src="https://1.www.s81c.com/common/carbon/web-components/tag/v2/latest/accordion.min.js"></script>
+  <style type="text/css">
+    // Suppresses the custom element until it has been defined
+    cds-dropdown:not(:defined),
+    cds-dropdown-item:not(:defined) {
+      visibility: hidden;
+    }
+  </style>
 </body>
 
 </html>

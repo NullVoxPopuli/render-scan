@@ -24,6 +24,7 @@ let styles = `
 
       .render-perf__title {
         display: inline-block;
+        min-width: max-content;
         box-sizing: content-box;
         font-size: 0.75rem;
         border: 1px solid #aa00ff;
