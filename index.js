@@ -68,18 +68,6 @@ class Highlight {
     this.#render();
   }
 
-  get icon() {
-    if (this.#totalRerenders > 5) {
-      return "⚠️";
-    }
-
-    if (this.#totalRerenders > 20) {
-      return "❌";
-    }
-
-    return "ℹ️";
-  }
-
   get title() {
     let reasons = [...this.#reasons.entries()].map(([key, count]) => `${key} (${count})`).join(' , ');
     let total = 0;
