@@ -39,6 +39,9 @@
     <button id="change-text">change element text</button>
     <button id="add-text-node">add text node</button>
     <button id="change-text-node">change text node</button>
+    <button id="same-text">set element text to same value</button>
+    <button id="same-attribute">set attribute to same value</button>
+    <button id="same-text-node">set text node to same value</button>
     <output id="elements"></output>
     <output id="text-nodes"></output>
 
@@ -85,6 +88,9 @@
         changeText: document.querySelector('#change-text-node'),
         output: document.querySelector('#elements'),
         textOutput: document.querySelector('#text-nodes'),
+        sameText: document.querySelector('#same-text'),
+        sameAttribute: document.querySelector('#same-attribute'),
+        sameTextNode: document.querySelector('#same-text-node'),
       }
 
       let textNodes = [];
@@ -113,6 +119,21 @@
         let item = textNodes[i];
 
         item.textContent = item.textContent = Math.random();
+      });
+      el.sameText.addEventListener('click', () => {
+        for (let item of el.output.children) {
+          item.textContent = item.textContent;
+        }
+      });
+      el.sameAttribute.addEventListener('click', () => {
+        for (let item of el.output.children) {
+          item.setAttribute('data-value', 'same');
+        }
+      });
+      el.sameTextNode.addEventListener('click', () => {
+        for (let item of textNodes) {
+          item.data = item.data;
+        }
       });
     </script>
     <script src="./index.js" type="text/javascript"></script>
