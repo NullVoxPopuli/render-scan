@@ -89,27 +89,61 @@ panel.classList.add('render-perf__panel');
 panel.innerHTML = `
   <dt>FPS</dt><dd data-fps="smoothed">-</dd>
   <dt>FPS avg
-    <select>
+    <select data-window="fps">
       <option value="1000">1s</option>
       <option value="5000" selected>5s</option>
       <option value="10000">10s</option>
       <option value="30000">30s</option>
     </select>
   </dt><dd data-fps="average">-</dd>
+  <dt>wasted re-renders/s
+    <select data-window="wasted">
+      <option value="5000">5s</option>
+      <option value="10000">10s</option>
+      <option value="30000" selected>30s</option>
+      <option value="60000">60s</option>
+    </select>
+  </dt><dd data-wasted>-</dd>
   <label><input type="checkbox" checked> only show avoidable re-renders</label>
 `;
 overlay.appendChild(panel);
 body.appendChild(overlay);
 
 let avoidableOnly = panel.querySelector('input');
-let averageWindow = panel.querySelector('select');
+let averageWindow = panel.querySelector('[data-window="fps"]');
+let wastedWindow = panel.querySelector('[data-window="wasted"]');
 let smoothedOutput = panel.querySelector('[data-fps="smoothed"]');
 let averageOutput = panel.querySelector('[data-fps="average"]');
-let maxWindow = Math.max(...[...averageWindow.options].map(option => Number(option.value)));
+let wastedOutput = panel.querySelector('[data-wasted]');
 let smoothingPeriod = 1000;
 let frames = [];
+let wasted = [];
+let pendingWasted = 0;
 let smoothed;
-let startedAt = performance.now();
+let startedAt;
+
+function longestWindow(select) {
+  return Math.max(...[...select.options].map(option => Number(option.value)));
+}
+
+function rate(entries, select, now) {
+  let duration = Math.min(Number(select.value), now - startedAt);
+
+  if (duration <= 0) return '-';
+
+  let since = now - duration;
+  let count = 0;
+
+  for (let [time, amount] of entries) {
+    if (time > since) count += amount;
+  }
+
+  return (count / (duration / 1000)).toFixed(1);
+}
+
+function recordWasted() {
+  pendingWasted++;
+}
 
 function setText(element, text) {
   if (element.textContent !== text) {
@@ -118,11 +152,22 @@ function setText(element, text) {
 }
 
 function measureFps(now) {
-  let previous = frames[frames.length - 1];
-  frames.push(now);
+  startedAt ??= now;
 
-  while (frames[0] < now - maxWindow) {
+  let previous = frames[frames.length - 1]?.[0];
+  frames.push([now, 1]);
+
+  if (pendingWasted > 0) {
+    wasted.push([now, pendingWasted]);
+    pendingWasted = 0;
+  }
+
+  while (frames[0][0] < now - longestWindow(averageWindow)) {
     frames.shift();
+  }
+
+  while (wasted.length > 0 && wasted[0][0] < now - longestWindow(wastedWindow)) {
+    wasted.shift();
   }
 
   if (previous !== undefined) {
@@ -136,11 +181,8 @@ function measureFps(now) {
     setText(smoothedOutput, smoothed.toFixed(1));
   }
 
-  let duration = Math.min(Number(averageWindow.value), now - startedAt);
-  let since = now - duration;
-  let count = frames.filter(time => time > since).length;
-
-  setText(averageOutput, (count / (duration / 1000)).toFixed(1));
+  setText(averageOutput, rate(frames, averageWindow, now));
+  setText(wastedOutput, rate(wasted, wastedWindow, now));
 
   requestAnimationFrame(measureFps);
 }
@@ -301,6 +343,7 @@ let mutationObserver = new MutationObserver((mutationList) => {
   for (let [target, changed] of attributes) {
     for (let [name, oldValue] of changed) {
       if (oldValue === target.getAttribute(name)) {
+        recordWasted();
         highlightNode(target, 'attribute set to same value');
       } else if (!avoidableOnly.checked) {
         highlightNode(target, 'attribute changed');
@@ -310,6 +353,7 @@ let mutationObserver = new MutationObserver((mutationList) => {
 
   for (let [target, { removed, added }] of children) {
     if (isSameChildren(removed, added)) {
+      recordWasted();
       highlightNode(target, 'children replaced with identical nodes');
     } else if (!avoidableOnly.checked) {
       highlightNode(target, 'children changed');
@@ -318,6 +362,7 @@ let mutationObserver = new MutationObserver((mutationList) => {
 
   for (let [target, oldValue] of text) {
     if (oldValue === target.data) {
+      recordWasted();
       highlightNode(target, 'text set to same value');
     } else if (!avoidableOnly.checked) {
       highlightNode(target, 'text changed');
