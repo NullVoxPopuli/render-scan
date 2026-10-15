@@ -58,6 +58,16 @@ let styles = `
         font-variant-numeric: tabular-nums;
       }
 
+      select, input, label {
+        font: inherit;
+      }
+
+      select {
+        color: inherit;
+        background-color: transparent;
+        border: 1px solid #aa00ff;
+      }
+
       label {
         grid-column: 1 / -1;
         display: flex;
@@ -77,18 +87,28 @@ overlay.classList.add('render-perf__container')
 let panel = document.createElement('dl');
 panel.classList.add('render-perf__panel');
 panel.innerHTML = `
-  <dt>FPS</dt><dd data-fps="instant">-</dd>
-  <dt>FPS (1s)</dt><dd data-fps="1000">-</dd>
-  <dt>FPS (5s)</dt><dd data-fps="5000">-</dd>
-  <dt>FPS (10s)</dt><dd data-fps="10000">-</dd>
+  <dt>FPS</dt><dd data-fps="smoothed">-</dd>
+  <dt>FPS avg
+    <select>
+      <option value="1000">1s</option>
+      <option value="5000" selected>5s</option>
+      <option value="10000">10s</option>
+      <option value="30000">30s</option>
+    </select>
+  </dt><dd data-fps="average">-</dd>
   <label><input type="checkbox" checked> only show avoidable re-renders</label>
 `;
 overlay.appendChild(panel);
 body.appendChild(overlay);
 
 let avoidableOnly = panel.querySelector('input');
-let fpsOutputs = [...panel.querySelectorAll('[data-fps]')];
+let averageWindow = panel.querySelector('select');
+let smoothedOutput = panel.querySelector('[data-fps="smoothed"]');
+let averageOutput = panel.querySelector('[data-fps="average"]');
+let maxWindow = Math.max(...[...averageWindow.options].map(option => Number(option.value)));
+let smoothingPeriod = 1000;
 let frames = [];
+let smoothed;
 let startedAt = performance.now();
 
 function setText(element, text) {
@@ -101,26 +121,26 @@ function measureFps(now) {
   let previous = frames[frames.length - 1];
   frames.push(now);
 
-  while (frames[0] < now - 10_000) {
+  while (frames[0] < now - maxWindow) {
     frames.shift();
   }
 
-  for (let output of fpsOutputs) {
-    let range = output.dataset.fps;
+  if (previous !== undefined) {
+    let delta = now - previous;
+    let instant = 1000 / delta;
 
-    if (range === 'instant') {
-      if (previous !== undefined) {
-        setText(output, String(Math.round(1000 / (now - previous))));
-      }
-      continue;
-    }
+    smoothed = smoothed === undefined
+      ? instant
+      : smoothed + (instant - smoothed) * (1 - Math.exp(-delta / smoothingPeriod));
 
-    let duration = Math.min(Number(range), now - startedAt);
-    let since = now - duration;
-    let count = frames.filter(time => time > since).length;
-
-    setText(output, (count / (duration / 1000)).toFixed(1));
+    setText(smoothedOutput, smoothed.toFixed(1));
   }
+
+  let duration = Math.min(Number(averageWindow.value), now - startedAt);
+  let since = now - duration;
+  let count = frames.filter(time => time > since).length;
+
+  setText(averageOutput, (count / (duration / 1000)).toFixed(1));
 
   requestAnimationFrame(measureFps);
 }
